@@ -6,7 +6,6 @@ const {
   updateUser,
   deleteUser,
 } = require("./user.service");
-const { hashSync, genSaltSync, compareSync } = require("bcrypt");
 const { sign } = require("jsonwebtoken");
 const Joi = require("@hapi/joi");
 
@@ -105,6 +104,21 @@ module.exports = {
     /*const salt = genSaltSync(10);
     body.password = hashSync(body.password, salt);*/
     updateUser(body, (err, results) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      return res.json({
+        success: 1,
+        message: "updated successfully",
+      });
+    });
+  },
+  updateUserPassword: (req, res) => {
+    const body = req.body;
+    /*const salt = genSaltSync(10);
+    body.password = hashSync(body.password, salt);*/
+    updateUserPassword(body, (err, results) => {
       if (err) {
         console.log(err);
         return;
