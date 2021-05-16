@@ -8,6 +8,7 @@ const {
 } = require("./user.service");
 const { sign } = require("jsonwebtoken");
 const Joi = require("@hapi/joi");
+const bcrypt = require('bcrypt');
 
 const loginSchema = Joi.object({
   email: Joi.string().required().email(),
@@ -17,7 +18,8 @@ const loginSchema = Joi.object({
 module.exports = {
   createUser: (req, res) => {
     const body = req.body;
-    const salt = genSaltSync(10);
+    const salt = bcrypt.genSaltSync(10);
+    body.password = bcrypt.hashSync(body.password, salt);
     create(body, (err, results) => {
       if (err) {
         console.log(err);
@@ -46,8 +48,7 @@ module.exports = {
           message: "Invalid email or password",
         });
       }
-      const result = body.password == results.password;
-      if (result) {
+      if (bcrypt.compareSync(body.password, results.password)) {
         results.password = undefined;
         const jsontoken = sign({ result: results }, "qwe1234", {
           expiresIn: "1h",
@@ -101,8 +102,6 @@ module.exports = {
   },
   updateUsers: (req, res) => {
     const body = req.body;
-    /*const salt = genSaltSync(10);
-    body.password = hashSync(body.password, salt);*/
     updateUser(body, (err, results) => {
       if (err) {
         console.log(err);
