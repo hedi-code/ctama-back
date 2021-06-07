@@ -28,7 +28,7 @@ module.exports = {
   },
   getUserByUserId: (id, callBack) => {
     pool.query(
-      `select id,firstname,lastname,email,role from users where id = ?`,
+      `select id,firstname,lastname,email,role,password from users where id = ?`,
       [id],
       (error, results, fields) => {
         if (error) {
@@ -97,6 +97,21 @@ module.exports = {
      console.log(data.id);
  
    },*/
+  updateUserPassword: (data, callBack) => {
+    pool.query(
+      `update users set password=? where id = ?`,
+      [
+        data.password,
+        data.id
+      ],
+      (error, results, fields) => {
+        if (error) {
+          callBack(error);
+        }
+        return callBack(null, results[0]);
+      }
+    );
+  },
   deleteUser: (id, callBack) => {
     pool.query(
       `delete from users where id = ?`,

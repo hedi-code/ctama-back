@@ -5,6 +5,7 @@ const {
   getUsers,
   updateUser,
   deleteUser,
+  updateUserPassword
 } = require("./user.service");
 const { sign } = require("jsonwebtoken");
 const Joi = require("@hapi/joi");
@@ -20,19 +21,28 @@ module.exports = {
     const body = req.body;
     const salt = bcrypt.genSaltSync(10);
     body.password = bcrypt.hashSync(body.password, salt);
-    create(body, (err, results) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({
-          success: 0,
-          message: "Database connection errror",
+    getUserByUserEmail(body.email, (err, results) => {
+      if (!results) {
+        create(body, (err, results) => {
+          if (err) {
+            console.log(err);
+            return res.status(500).json({
+              success: 0,
+              message: "Database connection errror",
+            });
+          }
+          return res.status(200).json({
+            success: 1,
+            data: results,
+          });
         });
       }
-      return res.status(200).json({
-        success: 1,
-        data: results,
-      });
-    });
+      else return res.json({
+        success: 0,
+        message: "email used"
+      })
+    })
+
   },
   login: (req, res) => {
     const body = req.body;
@@ -115,17 +125,33 @@ module.exports = {
   },
   updateUserPassword: (req, res) => {
     const body = req.body;
-    /*const salt = genSaltSync(10);
-    body.password = hashSync(body.password, salt);*/
-    updateUserPassword(body, (err, results) => {
+    const salt = bcrypt.genSaltSync(10);
+    body.password = bcrypt.hashSync(body.password, salt);
+    getUserByUserId(body.id, (err, results) => {
       if (err) {
         console.log(err);
         return;
       }
-      return res.json({
-        success: 1,
-        message: "updated successfully",
-      });
+      console.log(results.email + " /// " + body.oldPassword)
+      //
+      if (bcrypt.compareSync(body.oldPassword, results.password)) {
+        updateUserPassword(body, (err, results) => {
+
+          if (err) {
+            console.log(err);
+            return;
+          }
+          return res.json({
+            success: 1,
+            message: "updated successfully",
+          });
+        });
+      } else {
+        return res.json({
+          success: 0,
+          message: "ancient password wrong",
+        });
+      }
     });
   },
   deleteUser: (req, res) => {
